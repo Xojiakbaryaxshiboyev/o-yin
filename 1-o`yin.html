@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ilon O'yini</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid #fff;
+        }
+
+        #score {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+            position: absolute;
+            top: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Ball: 0</div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const gridSize = 20;
+        const canvasSize = 400;
+        let snake = [{ x: 8 * gridSize, y: 8 * gridSize }];
+        let direction = 'RIGHT';
+        let food = { x: 5 * gridSize, y: 5 * gridSize };
+        let score = 0;
+
+        // Yangi ovqatni joylashtirish
+        function spawnFood() {
+            food.x = Math.floor(Math.random() * (canvasSize / gridSize)) * gridSize;
+            food.y = Math.floor(Math.random() * (canvasSize / gridSize)) * gridSize;
+        }
+
+        // Ilonni yangilash
+        function updateSnake() {
+            let head = { ...snake[0] };
+
+            if (direction === 'RIGHT') head.x += gridSize;
+            if (direction === 'LEFT') head.x -= gridSize;
+            if (direction === 'UP') head.y -= gridSize;
+            if (direction === 'DOWN') head.y += gridSize;
+
+            snake.unshift(head); // Ilon boshini qo'shish
+
+            // Agar ilon ovqatni yesa
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                spawnFood(); // Yangi ovqatni yaratish
+            } else {
+                snake.pop(); // Ilon oxirini olib tashlash
+            }
+
+            // Ilon o'zi bilan urilsa yoki devorga urilsa, o'yin tugaydi
+            if (head.x < 0 || head.x >= canvasSize || head.y < 0 || head.y >= canvasSize || collisionWithSelf()) {
+                gameOver();
+            }
+        }
+
+        // Ilon o'ziga urilganmi?
+        function collisionWithSelf() {
+            for (let i = 1; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // O'yin tugadi
+        function gameOver() {
+            clearInterval(gameInterval);
+            alert("O'yin tugadi! Ball: " + score);
+            document.location.reload();
+        }
+
+        // O'yinni chizish
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvasni tozalash
+
+            // Ilonni chizish
+            snake.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? 'green' : 'lime';
+                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+            });
+
+            // Ovqatni chizish
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+
+            // Ballni yangilash
+            document.getElementById("score").innerText = "Ball: " + score;
+        }
+
+        // Klavishni tekshirish
+        function changeDirection(event) {
+            if (event.keyCode === 37 && direction !== 'RIGHT') {
+                direction = 'LEFT';
+            } else if (event.keyCode === 38 && direction !== 'DOWN') {
+                direction = 'UP';
+            } else if (event.keyCode === 39 && direction !== 'LEFT') {
+                direction = 'RIGHT';
+            } else if (event.keyCode === 40 && direction !== 'UP') {
+                direction = 'DOWN';
+            }
+        }
+
+        // O'yinni boshqarish
+        function startGame() {gameInterval = setInterval(() => {
+                updateSnake();
+                drawGame();
+            }, 100);
+        }
+
+        // Klavisha qo'shish
+        document.addEventListener("keydown", changeDirection);
+
+        startGame(); // O'yinni boshlash
+    </script>
+</body>
+</html>
